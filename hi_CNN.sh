@@ -37,7 +37,7 @@ elif [ $embed_type = "glove" ]
 then
 	embed_dir=../data/embedding/glove.6B
 	embeddingfile=$embed_dir/glove.6B.${embed_dim}d.txt.gz
-fi
+fifilter1_len
 
 nb_epochs=50
 # echo $embed_dim

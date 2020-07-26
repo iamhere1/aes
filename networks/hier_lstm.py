@@ -38,14 +38,14 @@ def build_model(opts, vocab_size=0, maxnum=50, maxlen=50, embedd_dim=50, embeddi
 
     resh_W = Reshape((N, L, embedd_dim), name='resh_W')(drop_x)
 
-    z = TimeDistributed(LSTM(opts.lstm_units, return_sequences=True), name='z')(resh_W)
-    avg_z = TimeDistributed(GlobalAveragePooling1D(), name='avg_z')(z)
+    z = TimeDistributed(LSTM(opts.lstm_units, return_sequences=True), name='z')(resh_W)  # N * L * lstm_units
+    avg_z = TimeDistributed(GlobalAveragePooling1D(), name='avg_z')(z)  # N * lstm_units
 
-    hz = LSTM(opts.lstm_units, return_sequences=True, name='hz')(avg_z)
+    hz = LSTM(opts.lstm_units, return_sequences=True, name='hz')(avg_z)  # N * lstm_units
     # TODO, random drop sentences
     drop_hz = Dropout(opts.dropout, name='drop_hz')(hz)
-    avg_hz = GlobalAveragePooling1D(name='avg_hz')(drop_hz)
-    y = Dense(output_dim=1, activation='sigmoid', name='output')(avg_hz)
+    avg_hz = GlobalAveragePooling1D(name='avg_hz')(drop_hz)  # lstm_units
+    y = Dense(output_dim=1, activation='sigmoid', name='output')(avg_hz)  # 1
 
     model = Model(input=word_input, output=y)
 
@@ -78,18 +78,18 @@ def build_bidirectional_model(opts, vocab_size=0, maxnum=50, maxlen=50, embedd_d
 
     resh_W = Reshape((N, L, embedd_dim), name='resh_W')(drop_x)
 
-    z_fwd = TimeDistributed(LSTM(opts.lstm_units, return_sequences=True), name='z_fwd')(resh_W)
-    z_bwd = TimeDistributed(LSTM(opts.lstm_units, return_sequences=True, go_backwards=True), name='z_bwd')(resh_W)
-    z_merged = merge([z_fwd, z_bwd], mode='concat', name='z_merged')
+    z_fwd = TimeDistributed(LSTM(opts.lstm_units, return_sequences=True), name='z_fwd')(resh_W)  # N * L * lstm_units
+    z_bwd = TimeDistributed(LSTM(opts.lstm_units, return_sequences=True, go_backwards=True), name='z_bwd')(resh_W)  # N * L * lstm_units
+    z_merged = merge([z_fwd, z_bwd], mode='concat', name='z_merged')  # N * L * 2*lstm_units
 
-    avg_z = TimeDistributed(GlobalAveragePooling1D(), name='avg_z')(z_merged)
+    avg_z = TimeDistributed(GlobalAveragePooling1D(), name='avg_z')(z_merged)  # N * 2*lstm_units
 
-    hz_fwd = LSTM(opts.lstm_units, return_sequences=True, name='hz_fwd')(avg_z)
-    hz_bwd = LSTM(opts.lstm_units, return_sequences=True, go_backwards=True, name='hz_bwd')(avg_z)
-    hz_merged = merge([hz_fwd, hz_bwd], mode='concat', name='hz_merged')
+    hz_fwd = LSTM(opts.lstm_units, return_sequences=True, name='hz_fwd')(avg_z)  # N * 2*lstm_units
+    hz_bwd = LSTM(opts.lstm_units, return_sequences=True, go_backwards=True, name='hz_bwd')(avg_z)  # N * 2*lstm_units
+    hz_merged = merge([hz_fwd, hz_bwd], mode='concat', name='hz_merged')  # N * 2*lstm_units*2
     # avg_h = MeanOverTime(mask_zero=True, name='avg_h')(hz)
-    avg_hz = GlobalAveragePooling1D(name='avg_hz')(hz_merged)
-    y = Dense(output_dim=1, activation='sigmoid', name='output')(avg_hz)
+    avg_hz = GlobalAveragePooling1D(name='avg_hz')(hz_merged)  # 2*lstm_units*2
+    y = Dense(output_dim=1, activation='sigmoid', name='output')(avg_hz)  # 1
 
     model = Model(input=word_input, output=y)
     if opts.init_bias and init_mean_value:
@@ -122,14 +122,14 @@ def build_attention_model(opts, vocab_size=0, maxnum=50, maxlen=50, embedd_dim=5
 
     resh_W = Reshape((N, L, embedd_dim), name='resh_W')(drop_x)
 
-    z = TimeDistributed(LSTM(opts.lstm_units, return_sequences=True), name='z')(resh_W)
-    avg_z = TimeDistributed(GlobalAveragePooling1D(), name='avg_z')(z)
+    z = TimeDistributed(LSTM(opts.lstm_units, return_sequences=True), name='z')(resh_W)  # N * L * lstm_units
+    avg_z = TimeDistributed(GlobalAveragePooling1D(), name='avg_z')(z)  # N * lstm_units
 
-    hz = LSTM(opts.lstm_units, return_sequences=True, name='hz')(avg_z)
+    hz = LSTM(opts.lstm_units, return_sequences=True, name='hz')(avg_z)  # N * lstm_units
     # avg_h = MeanOverTime(mask_zero=True, name='avg_h')(hz)
     # avg_hz = GlobalAveragePooling1D(name='avg_hz')(hz)
-    attent_hz = Attention(name='attent_hz')(hz)
-    y = Dense(output_dim=1, activation='sigmoid', name='output')(attent_hz)
+    attent_hz = Attention(name='attent_hz')(hz)  # lstm_units
+    y = Dense(output_dim=1, activation='sigmoid', name='output')(attent_hz)  # 1
 
     model = Model(input=word_input, output=y)
     if opts.init_bias and init_mean_value:

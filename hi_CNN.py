@@ -81,10 +81,11 @@ def main():
     datapaths = [args.train, args.dev, args.test]
     embedding_path = args.embedding_dict
     oov = args.oov
-    embedding = args.embedding
+    embedding = args.embedding  # glove or word2vec
     embedd_dim = args.embedding_dim
     prompt_id = args.prompt_id
 
+    # 读取数据
     (X_train, Y_train, mask_train), (X_dev, Y_dev, mask_dev), (X_test, Y_test, mask_test), \
             vocab, vocab_size, embed_table, overal_maxlen, overal_maxnum, init_mean_value = prepare_sentence_data(datapaths, \
             embedding_path, embedding, embedd_dim, prompt_id, args.vocab_size, tokenize_text=True, \
@@ -110,6 +111,7 @@ def main():
         raise NotImplementedError
 
     else:
+        # 构建模型
         model = build_hcnn_model(args, vocab_size, max_sentnum, max_sentlen, embedd_dim, embed_table, True)
 
     C_train, C_test, C_dev = None, None, None

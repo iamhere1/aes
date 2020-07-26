@@ -85,6 +85,7 @@ def build_hrcnn_model(opts, vocab_size=0, char_vocabsize=0, maxnum=50, maxlen=50
     drop_x = Dropout(opts.dropout, name='drop_x')(x_maskedout)
 
     resh_W = Reshape((N, L, embedd_dim), name='resh_W')(drop_x)
+    print("resh_W.shape:", resh_W.shape)
 
     # add char-based CNN, concatenating with word embedding to compose word representation
     if opts.use_char:
@@ -108,7 +109,9 @@ def build_hrcnn_model(opts, vocab_size=0, char_vocabsize=0, maxnum=50, maxlen=50
         avg_zcnn = TimeDistributed(GlobalAveragePooling1D(), name='avg_zcnn')(zcnn)
     elif opts.mode == 'att':
         logger.info('Use attention-pooling on sentence')
+        # print("zcnn.shape:", zcnn.shape)
         avg_zcnn = TimeDistributed(Attention(), name='avg_zcnn')(zcnn)
+        # print("avg_zcnn.shape:", avg_zcnn.shape)
     elif opts.mode == 'merged':
         logger.info('Use mean-over-time and attention-pooling together on sentence')
         avg_zcnn1 = TimeDistributed(GlobalAveragePooling1D(), name='avg_zcnn1')(zcnn)
